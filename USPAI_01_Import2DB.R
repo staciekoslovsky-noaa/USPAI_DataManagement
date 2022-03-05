@@ -4,7 +4,8 @@
 # Set Working Variables
 wd <- "D:\\noaa_uspai_test_data\\uspai_test"
 metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test\\Template4Import.json"
-projectPrefix <- "noaa_test"
+projectPrefix <- "uspai_test"
+schema <- 'uspai_test2'
 
 # Create functions -----------------------------------------------
 # Function to install packages needed
@@ -59,7 +60,7 @@ meta2DB$dt <- ""
 meta2DB$flight <- ""
 meta2DB$camera_view <- ""
 meta2DB$camera_model <- ""
-meta2DB <- meta2DB[which(meta2DB == "test"), ]
+meta2DB <- meta2DB[which(meta2DB != "test"), ]
 
 for (i in 1:nrow(image_dir)){
   print(i)
@@ -76,9 +77,18 @@ for (i in 1:nrow(image_dir)){
   images2DB <- rbind(images2DB, images)
   
   meta <- files[which(files$image_type == "meta.json"), ]
+  
   if (nrow(meta) > 1) {
     for (j in 1:nrow(meta)){
       meta_file <- paste(image_dir$camera_dir[i], meta$image_name[j], sep = "/")
+      if(meta_file == 'D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_193358.875220_meta.json') next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_194642.875220_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_195903.875220_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_203028.375220_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_203313.375220_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_193358.705944_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_194642.705944_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_195513.705944_meta.json") next
       metaJ <- data.frame(rjson::fromJSON(paste(readLines(meta_file), collapse="")), stringsAsFactors = FALSE)
       names(metaJ)[names(metaJ) == "effort"] <- "effort_field"
       metaJ$effort_reconciled <- NA
@@ -159,7 +169,7 @@ dat <- c("tbl_images", "geo_images_meta")
 
 # Identify and delete dependencies for each table
 for (i in 1:length(dat)){
-  sql <- paste("SELECT fxn_deps_save_and_drop_dependencies(\'upsai_test\', \'", dat[i], "\')", sep = "")
+  sql <- paste(paste("SELECT fxn_deps_save_and_drop_dependencies(\'", schema, "\', \'", sep = ""), dat[i], "\')", sep = "")
   RPostgreSQL::dbSendQuery(con, sql)
   RPostgreSQL::dbClearResult(dbListResults(con)[[1]])
 }
@@ -167,10 +177,10 @@ RPostgreSQL::dbSendQuery(con, "DELETE FROM deps_saved_ddl WHERE deps_ddl_to_run 
 
 # Push data to pepgeo database and process data to spatial datasets where appropriate
 for (i in 1:length(dat)){
-  RPostgreSQL::dbWriteTable(con, c("uspai_test", dat[i]), data.frame(df[i]), overwrite = TRUE, row.names = FALSE)
+  RPostgreSQL::dbWriteTable(con, c(schema, dat[i]), data.frame(df[i]), overwrite = TRUE, row.names = FALSE)
   if (i == 2) {
-    sql1 <- paste("ALTER TABLE uspai_test.", dat[i], " ADD COLUMN geom geometry(POINT, 4326)", sep = "")
-    sql2 <- paste("UPDATE uspai_test.", dat[i], " SET geom = ST_SetSRID(ST_MakePoint(ins_longitude, ins_latitude), 4326)", sep = "")
+    sql1 <- paste("ALTER TABLE ", schema, ".", dat[i], " ADD COLUMN geom geometry(POINT, 4326)", sep = "")
+    sql2 <- paste("UPDATE ", schema, ".", dat[i], " SET geom = ST_SetSRID(ST_MakePoint(ins_longitude, ins_latitude), 4326)", sep = "")
     RPostgreSQL::dbSendQuery(con, sql1)
     RPostgreSQL::dbSendQuery(con, sql2)
   }
@@ -178,25 +188,25 @@ for (i in 1:length(dat)){
 
 # Recreate table dependencies
 for (i in length(dat):1) {
-  sql <- paste("SELECT fxn_deps_restore_dependencies(\'uspai_test\', \'", dat[i], "\')", sep = "")
+  sql <- paste(paste("SELECT fxn_deps_restore_dependencies(\'", schema, "\', \'", sep = ""), dat[i], "\')", sep = "")
   RPostgreSQL::dbSendQuery(con, sql)
   RPostgreSQL::dbClearResult(dbListResults(con)[[1]])
 }
 
 # Create image group field 
-RPostgreSQL::dbSendQuery(con, "UPDATE uspai_test.tbl_images i
+RPostgreSQL::dbSendQuery(con, paste("UPDATE ", schema, ".tbl_images i
                                 SET image_group = id
-                                FROM (select flight, camera_view, dt, dense_rank() over (order by flight, camera_view, dt) id FROM uspai_test.tbl_images) temp
+                                FROM (select flight, camera_view, dt, dense_rank() over (order by flight, camera_view, dt) id FROM ", schema, ".tbl_images) temp
                                 WHERE temp.flight = i.flight
                                 AND temp.camera_view = i.camera_view
-                                AND temp.dt = i.dt")
+                                AND temp.dt = i.dt", sep = ""))
 
-RPostgreSQL::dbSendQuery(con, "UPDATE uspai_test.geo_images_meta m
+RPostgreSQL::dbSendQuery(con, paste("UPDATE ", schema, ".geo_images_meta m
                                 SET image_group = i.image_group
-                                FROM uspai_test.tbl_images i
+                                FROM ", schema, ".tbl_images i
                                 WHERE m.flight = i.flight
                                 AND m.camera_view = i.camera_view
-                                AND m.dt = i.dt")
+                                AND m.dt = i.dt", sep = ""))
 
 # Disconnect for database and delete unnecessary variables ----------------------------
 RPostgreSQL::dbDisconnect(con)
