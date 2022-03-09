@@ -1,11 +1,23 @@
-# JoBSS: Process Data/Images to DB
+# USPAI: Process Data/Images to DB
 # S. Hardy
 
-# Set Working Variables
-wd <- "D:\\noaa_uspai_test_data\\uspai_test"
-metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test\\Template4Import.json"
+#### Set Working Variables -- uspai_test1
+# wd <- "D:\\noaa_uspai_test_data\\noaa_test"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\noaa_test\\Template4Import.json"
+# projectPrefix <- "noaa_test"
+# schema <- 'uspai_test1'
+
+#### Set Working Variables -- uspai_test2
+wd <- "E:\\noaa_uspai_test_data\\uspai_test"
+metaTemplate <- "E:\\noaa_uspai_test_data\\uspai_test\\Template4Import.json"
 projectPrefix <- "uspai_test"
 schema <- 'uspai_test2'
+
+#### Set Working Variables -- uspai_test3
+# wd <- "D:\\noaa_uspai_test_data\\ground_test"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\ground_test\\Template4Import.json"
+# projectPrefix <- "NOAA_ground_test"
+# schema <- 'uspai_test3'
 
 # Create functions -----------------------------------------------
 # Function to install packages needed
@@ -39,6 +51,7 @@ for (i in 2:nrow(dir)){
 camera_models <- camera_models[!grepl("processed_results", camera_models)]
 camera_models <- camera_models[!grepl("default", camera_models)]
 camera_models <- camera_models[!grepl("detections", camera_models)]
+camera_models <- camera_models[!grepl("ins_raw", camera_models)]
 camera_models <- unique(camera_models)
 image_dir <- merge(camera_models, c("left_view", "center_view", "right_view"), ALL = true)
 colnames(image_dir) <- c("path", "camera_loc")
@@ -52,7 +65,7 @@ images2DB <- data.frame(image_name = as.character(""), dt = as.character(""), im
                         image_dir = as.character(""), stringsAsFactors = FALSE)
 images2DB <- images2DB[which(images2DB == "test"), ]
 
-meta2DB <- data.frame(rjson::fromJSON(paste(readLines(metaTemplate), collapse="")))
+meta2DB <- data.frame(rjson::fromJSON(file = metaTemplate))
 names(meta2DB)[names(meta2DB) == "effort"] <- "effort_field"
 meta2DB$effort_reconciled <- ""
 meta2DB$meta_file <- ""
@@ -60,7 +73,7 @@ meta2DB$dt <- ""
 meta2DB$flight <- ""
 meta2DB$camera_view <- ""
 meta2DB$camera_model <- ""
-meta2DB <- meta2DB[which(meta2DB != "test"), ]
+meta2DB <- meta2DB[which(meta2DB$flight != ""), ]
 
 for (i in 1:nrow(image_dir)){
   print(i)
@@ -89,12 +102,16 @@ for (i in 1:nrow(image_dir)){
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_193358.705944_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_194642.705944_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_195513.705944_meta.json") next
-      metaJ <- data.frame(rjson::fromJSON(paste(readLines(meta_file), collapse="")), stringsAsFactors = FALSE)
+      metaJ <- data.frame(rjson::fromJSON(file = meta_file), stringsAsFactors = FALSE)
       names(metaJ)[names(metaJ) == "effort"] <- "effort_field"
       metaJ$effort_reconciled <- NA
       metaJ$meta_file <- basename(meta_file)
       metaJ$dt <- str_extract(metaJ$meta_file, "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]")
-      metaJ$flight <- str_extract(metaJ$meta_file, "fl[0-9][0-9]")
+      # Use this for flights normally
+        # metaJ$flight <- str_extract(metaJ$meta_file, "fl[0-9][0-9]")
+      # Use these for flights when letter included in flight (eyeroll)
+        metaJ$flight <- str_extract(metaJ$meta_file, "fl[0-9][0-9][a-z]")
+        metaJ$flight <- ifelse(is.na(metaJ$flight), str_extract(metaJ$meta_file, "fl[0-9][0-9]"), metaJ$flight)
       metaJ$camera_view <- gsub("_", "", str_extract(metaJ$meta_file, "_[A-Z]_"))
       metaJ$camera_model <- basename(image_dir$path[i])
       meta2DB <- plyr::rbind.fill(meta2DB, metaJ)
@@ -103,8 +120,11 @@ for (i in 1:nrow(image_dir)){
 }
 
 colnames(meta2DB) <- gsub("\\.", "_", colnames(meta2DB))
-
-images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9][0-9]")
+# Use this for flights normally
+  # images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9][0-9]")
+# Use these for flights when letter included in flight (eyeroll)
+  images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9][0-9][a-z]")
+  images2DB$flight <- ifelse(is.na(images2DB$flight), str_extract(images2DB$image_name, "fl[0-9][0-9]"), images2DB$flight)
 images2DB$camera_view <- gsub("_", "", str_extract(images2DB$image_name, "_[A-Z]_"))
 images2DB$ir_nuc <- NA
 images2DB$rgb_manualreview <- NA
@@ -194,6 +214,7 @@ for (i in length(dat):1) {
 }
 
 # Create image group field 
+RPostgreSQL::dbSendQuery(con, paste("ALTER TABLE ", schema, ".tbl_images ADD COLUMN image_group integer", sep = ""))
 RPostgreSQL::dbSendQuery(con, paste("UPDATE ", schema, ".tbl_images i
                                 SET image_group = id
                                 FROM (select flight, camera_view, dt, dense_rank() over (order by flight, camera_view, dt) id FROM ", schema, ".tbl_images) temp
@@ -201,6 +222,7 @@ RPostgreSQL::dbSendQuery(con, paste("UPDATE ", schema, ".tbl_images i
                                 AND temp.camera_view = i.camera_view
                                 AND temp.dt = i.dt", sep = ""))
 
+RPostgreSQL::dbSendQuery(con, paste("ALTER TABLE ", schema, ".geo_images_meta ADD COLUMN image_group integer", sep = ""))
 RPostgreSQL::dbSendQuery(con, paste("UPDATE ", schema, ".geo_images_meta m
                                 SET image_group = i.image_group
                                 FROM ", schema, ".tbl_images i
