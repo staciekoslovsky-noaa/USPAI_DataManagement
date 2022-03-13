@@ -1,23 +1,36 @@
 # USPAI: Process Data/Images to DB
 # S. Hardy
 
-#### Set Working Variables -- uspai_test1
+#### Set Working Variables -- uspai_test1 --fl01
 # wd <- "D:\\noaa_uspai_test_data\\noaa_test"
 # metaTemplate <- "D:\\noaa_uspai_test_data\\noaa_test\\Template4Import.json"
 # projectPrefix <- "noaa_test"
 # schema <- 'uspai_test1'
 
-#### Set Working Variables -- uspai_test2
-wd <- "E:\\noaa_uspai_test_data\\uspai_test"
-metaTemplate <- "E:\\noaa_uspai_test_data\\uspai_test\\Template4Import.json"
-projectPrefix <- "uspai_test"
-schema <- 'uspai_test2'
+#### Set Working Variables -- uspai_test2 --fl02
+# wd <- "E:\\noaa_uspai_test_data\\uspai_test"
+# metaTemplate <- "E:\\noaa_uspai_test_data\\uspai_test\\Template4Import.json"
+# projectPrefix <- "uspai_test"
+# schema <- 'uspai_test2'
 
-#### Set Working Variables -- uspai_test3
+#### Set Working Variables -- uspai_test3 --fl05, fl06, fl07
 # wd <- "D:\\noaa_uspai_test_data\\ground_test"
 # metaTemplate <- "D:\\noaa_uspai_test_data\\ground_test\\Template4Import.json"
 # projectPrefix <- "NOAA_ground_test"
 # schema <- 'uspai_test3'
+
+#### Set Working Variables -- uspai_test4 --fl12-16
+# wd <- "E:\\KAMERA\\uspai_test4_schema"
+# metaTemplate <- "E:\\KAMERA\\uspai_test4_schema\\Template4Import.json"
+# projectPrefix <- "uspai_test"
+# schema <- 'uspai_test4'
+
+#### Set Working Variables -- uspai_test5 --fl12-16
+wd <- "E:\\KAMERA\\uspai_test5_schema"
+metaTemplate <- "E:\\KAMERA\\uspai_test5_schema\\Template4Import.json"
+projectPrefix <- "uspai_test"
+schema <- 'uspai_test5'
+
 
 # Create functions -----------------------------------------------
 # Function to install packages needed
@@ -77,6 +90,7 @@ meta2DB <- meta2DB[which(meta2DB$flight != ""), ]
 
 for (i in 1:nrow(image_dir)){
   print(i)
+  if(image_dir$path[i] == "E:\\KAMERA\\uspai_test5_schema/fl19/NOAA_ground_test_config") next
   files <- list.files(image_dir$camera_dir[i], full.names = FALSE, recursive = FALSE)
   files <- data.frame(image_name = files[which(startsWith(files, projectPrefix) == TRUE)], stringsAsFactors = FALSE)
   files$dt <- str_extract(files$image_name, "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]")
@@ -100,8 +114,11 @@ for (i in 1:nrow(image_dir)){
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_203028.375220_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_203313.375220_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_193358.705944_meta.json") next
-      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_194642.705944_meta.json") next
+      if(meta_file == "D:\\no!aa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_194642.705944_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_195513.705944_meta.json") next
+      if(meta_file == "E:\\KAMERA\\uspai_test4_schema/fl12/test/center_view/uspai_test_fl12_C_20220309_001326.245480_meta.json") next
+      if(meta_file == "E:\\KAMERA\\uspai_test4_schema/fl12/test/center_view/uspai_test_fl12_C_20220309_003352.245480_meta.json") next
+      if(meta_file == "E:\\KAMERA\\uspai_test5_schema/fl18/test/right_view/uspai_test_fl18_R_20220311_201818.406941_meta.json") next
       metaJ <- data.frame(rjson::fromJSON(file = meta_file), stringsAsFactors = FALSE)
       names(metaJ)[names(metaJ) == "effort"] <- "effort_field"
       metaJ$effort_reconciled <- NA
