@@ -2,34 +2,46 @@
 # S. Hardy
 
 #### Set Working Variables -- uspai_test1 --fl01
-# wd <- "D:\\noaa_uspai_test_data\\noaa_test"
-# metaTemplate <- "D:\\noaa_uspai_test_data\\noaa_test\\Template4Import.json"
+# wd <- "D:\\noaa_uspai_test_data\\uspai_test1_schema"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test1_schema\\Template4Import.json"
 # projectPrefix <- "noaa_test"
 # schema <- 'uspai_test1'
 
 #### Set Working Variables -- uspai_test2 --fl02
-# wd <- "E:\\noaa_uspai_test_data\\uspai_test"
-# metaTemplate <- "E:\\noaa_uspai_test_data\\uspai_test\\Template4Import.json"
+# wd <- "E:\\noaa_uspai_test_data\\uspai_test2_schema"
+# metaTemplate <- "E:\\noaa_uspai_test_data\\uspai_test2_schema\\Template4Import.json"
 # projectPrefix <- "uspai_test"
 # schema <- 'uspai_test2'
 
 #### Set Working Variables -- uspai_test3 --fl05, fl06, fl07
-# wd <- "D:\\noaa_uspai_test_data\\ground_test"
-# metaTemplate <- "D:\\noaa_uspai_test_data\\ground_test\\Template4Import.json"
+# wd <- "D:\\noaa_uspai_test_data\\uspai_test3_schema"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test3_schema\\Template4Import.json"
 # projectPrefix <- "NOAA_ground_test"
 # schema <- 'uspai_test3'
 
 #### Set Working Variables -- uspai_test4 --fl12-16
-# wd <- "E:\\KAMERA\\uspai_test4_schema"
-# metaTemplate <- "E:\\KAMERA\\uspai_test4_schema\\Template4Import.json"
+# wd <- "D:\\noaa_uspai_test_data\\uspai_test4_schema"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test4_schema\\Template4Import.json"
 # projectPrefix <- "uspai_test"
 # schema <- 'uspai_test4'
 
 #### Set Working Variables -- uspai_test5 --fl12-16
-wd <- "E:\\KAMERA\\uspai_test5_schema"
-metaTemplate <- "E:\\KAMERA\\uspai_test5_schema\\Template4Import.json"
-projectPrefix <- "uspai_test"
-schema <- 'uspai_test5'
+# wd <- "D:\\noaa_uspai_test_data\\uspai_test5_schema"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test5_schema\\Template4Import.json"
+# projectPrefix <- "uspai_test"
+# schema <- 'uspai_test5'
+
+#### Set Working Variables -- uspai_test6 --fl28
+# wd <- "D:\\noaa_uspai_test_data\\uspai_test6_schema"
+# metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test6_schema\\Template4Import.json"
+# projectPrefix <- "uspai_test"
+# schema <- 'uspai_test6'
+
+#### Set Working Variables -- uspai_test7 --fl29
+wd <- "D:\\noaa_uspai_test_data\\uspai_test7_schema"
+metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test7_schema\\Template4Import.json"
+projectPrefix <- "default_effort_2019"
+schema <- 'uspai_test7'
 
 
 # Create functions -----------------------------------------------
