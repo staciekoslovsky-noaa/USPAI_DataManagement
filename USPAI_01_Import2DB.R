@@ -38,10 +38,10 @@
 # schema <- 'uspai_test6'
 
 #### Set Working Variables -- uspai_test7 --fl29
-wd <- "D:\\noaa_uspai_test_data\\uspai_test7_schema"
-metaTemplate <- "D:\\noaa_uspai_test_data\\uspai_test7_schema\\Template4Import.json"
-projectPrefix <- "default_effort_2019"
-schema <- 'uspai_test7'
+wd <- "D:\\uspai_bench_data\\uspai_bench1_schema"
+metaTemplate <- "D:\\uspai_bench_data\\uspai_bench1_schema\\Template4Import.json"
+projectPrefix <- "uspai_benchtest"
+schema <- 'uspai_bench1'
 
 
 # Create functions -----------------------------------------------
@@ -103,6 +103,8 @@ meta2DB <- meta2DB[which(meta2DB$flight != ""), ]
 for (i in 1:nrow(image_dir)){
   print(i)
   if(image_dir$path[i] == "E:\\KAMERA\\uspai_test5_schema/fl19/NOAA_ground_test_config") next
+  if(image_dir$camera_dir[i]== "D:\\uspai_bench_data\\uspai_bench1_schema/fl02/NOAA_ground_test_config/center_view") next
+  
   files <- list.files(image_dir$camera_dir[i], full.names = FALSE, recursive = FALSE)
   files <- data.frame(image_name = files[which(startsWith(files, projectPrefix) == TRUE)], stringsAsFactors = FALSE)
   files$dt <- str_extract(files$image_name, "[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9].[0-9][0-9][0-9][0-9][0-9][0-9]")
@@ -126,12 +128,23 @@ for (i in 1:nrow(image_dir)){
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_203028.375220_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/left_view/uspai_test_fl02_L_20220303_203313.375220_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_193358.705944_meta.json") next
-      if(meta_file == "D:\\no!aa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_194642.705944_meta.json") next
+      if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_194642.705944_meta.json") next
       if(meta_file == "D:\\noaa_uspai_test_data\\uspai_test/fl02/test/right_view/uspai_test_fl02_R_20220303_195513.705944_meta.json") next
       if(meta_file == "E:\\KAMERA\\uspai_test4_schema/fl12/test/center_view/uspai_test_fl12_C_20220309_001326.245480_meta.json") next
       if(meta_file == "E:\\KAMERA\\uspai_test4_schema/fl12/test/center_view/uspai_test_fl12_C_20220309_003352.245480_meta.json") next
       if(meta_file == "E:\\KAMERA\\uspai_test5_schema/fl18/test/right_view/uspai_test_fl18_R_20220311_201818.406941_meta.json") next
-      metaJ <- data.frame(rjson::fromJSON(file = meta_file), stringsAsFactors = FALSE)
+      if(meta_file == "D:\\uspai_bench_data\\uspai_bench1_schema/fl02/NOAA_ground_test_config/right_view/uspai_benchtest_fl2_R_20220519_002728.903326_meta.json") next
+      if(meta_file == "D:\\uspai_bench_data\\uspai_bench1_schema/fl02/NOAA_ground_test_config/right_view/uspai_benchtest_fl2_R_20220519_002729.569993_meta.json") next
+      if(meta_file == "D:\\uspai_bench_data\\uspai_bench1_schema/fl02/NOAA_ground_test_config/right_view/uspai_benchtest_fl2_R_20220519_002730.236660_meta.json") next
+      if(meta_file == "D:\\uspai_bench_data\\uspai_bench1_schema/fl02/NOAA_ground_test_config/right_view/uspai_benchtest_fl2_R_20220519_003323.808263_meta.json") next
+      
+      metaJ <- rjson::fromJSON(file = meta_file)
+  
+      if (is.null(metaJ$ins)) {
+        metaJ["ins"] <- NULL
+      }
+      
+      metaJ <- data.frame(metaJ, stringsAsFactors = FALSE)
       names(metaJ)[names(metaJ) == "effort"] <- "effort_field"
       metaJ$effort_reconciled <- NA
       metaJ$meta_file <- basename(meta_file)
@@ -152,8 +165,13 @@ colnames(meta2DB) <- gsub("\\.", "_", colnames(meta2DB))
 # Use this for flights normally
   # images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9][0-9]")
 # Use these for flights when letter included in flight (eyeroll)
-  images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9][0-9][a-z]")
-  images2DB$flight <- ifelse(is.na(images2DB$flight), str_extract(images2DB$image_name, "fl[0-9][0-9]"), images2DB$flight)
+  # images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9][0-9][a-z]")
+  # images2DB$flight <- ifelse(is.na(images2DB$flight), str_extract(images2DB$image_name, "fl[0-9][0-9]"), images2DB$flight)
+# Use these for flights with one number instead of two
+  images2DB$flight <- str_extract(images2DB$image_name, "fl[0-9]")
+  images2DB$flight <- paste("fl0", str_extract(images2DB$image_name, "[0-9]"), sep = "")
+  meta2DB$flight <- str_extract(meta2DB$meta_file, "fl[0-9]")
+  meta2DB$flight <- paste("fl0", str_extract(meta2DB$meta_file, "[0-9]"), sep = "")
 images2DB$camera_view <- gsub("_", "", str_extract(images2DB$image_name, "_[A-Z]_"))
 images2DB$ir_nuc <- NA
 images2DB$rgb_manualreview <- NA
@@ -210,7 +228,7 @@ con <- RPostgreSQL::dbConnect(PostgreSQL(),
                               dbname = Sys.getenv("pep_db"), 
                               host = Sys.getenv("pep_ip"), 
                               user = Sys.getenv("pep_admin"), 
-                              rstudioapi::askForPassword(paste("Enter your DB password for user account: ", Sys.getenv("pep_admin"), sep = "")))
+                              password = Sys.getenv("admin_pw"), )
 
 # Create list of data to process
 df <- list(images2DB, meta2DB)
