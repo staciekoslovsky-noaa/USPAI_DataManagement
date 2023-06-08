@@ -38,10 +38,17 @@
 # schema <- 'uspai_test6'
 
 #### Set Working Variables -- uspai_test7 --fl29
-wd <- "D:\\uspai_bench_data\\uspai_bench1_schema"
-metaTemplate <- "D:\\uspai_bench_data\\uspai_bench1_schema\\Template4Import.json"
-projectPrefix <- "uspai_benchtest"
-schema <- 'uspai_bench1'
+# wd <- "D:\\uspai_bench_data\\uspai_bench1_schema"
+# metaTemplate <- "D:\\uspai_bench_data\\uspai_bench1_schema\\Template4Import.json"
+# projectPrefix <- "uspai_benchtest"
+# schema <- 'uspai_bench1'
+
+#### Set Working Variables -- uspai_test7 --fl29
+wd <- "D:\\USPAI_flightest\\"
+metaTemplate <- "D:\\USPAI_flightest\\Template4Import.json"
+projectPrefix <- "uspai_flightest"
+schema <- 'uspai_flightest95'
+
 
 
 # Create functions -----------------------------------------------
@@ -66,7 +73,7 @@ setwd(wd)
 
 # Create list of camera folders within which data need to be processed 
 dir <- list.dirs(wd, full.names = FALSE, recursive = FALSE)
-dir <- data.frame(path = dir[grep("fl", dir)], stringsAsFactors = FALSE)
+dir <- data.frame(path = dir[grep("fl95", dir)], stringsAsFactors = FALSE)
 camera_models <- list.dirs(paste(wd, dir$path[1], sep = "/"), full.names = TRUE, recursive = FALSE)
 for (i in 2:nrow(dir)){
   temp <- list.dirs(paste(wd, dir$path[i], sep = "/"), full.names = TRUE, recursive = FALSE)
@@ -76,9 +83,12 @@ for (i in 2:nrow(dir)){
 camera_models <- camera_models[!grepl("processed_results", camera_models)]
 camera_models <- camera_models[!grepl("default", camera_models)]
 camera_models <- camera_models[!grepl("detections", camera_models)]
+camera_models <- camera_models[!grepl("delete_this", camera_models)]
 camera_models <- camera_models[!grepl("ins_raw", camera_models)]
 camera_models <- unique(camera_models)
-image_dir <- merge(camera_models, c("left_view", "center_view", "right_view"), ALL = true)
+image_dir <- merge(camera_models, c(#"left_view", 
+  "center_view"# , "right_view"
+  ), ALL = true)
 colnames(image_dir) <- c("path", "camera_loc")
 image_dir$path <- as.character(image_dir$path)
 image_dir$camera_dir <- paste(image_dir$path, image_dir$camera_loc, sep = "/")
